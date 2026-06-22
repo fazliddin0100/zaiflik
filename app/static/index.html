@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zaiflik Skaneri</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <h1>Zaiflik Skaneri</h1>
+      </div>
+      <p class="subtitle">Domen orqali sayt xavfsizligini tekshiring</p>
+    </header>
+
+    <form id="scanForm" class="scan-form">
+      <div class="input-group">
+        <input
+          type="text"
+          id="domainInput"
+          placeholder="example.com"
+          autocomplete="off"
+          required
+        >
+        <button type="submit" id="scanBtn">
+          <span class="btn-text">Tekshirish</span>
+          <span class="btn-loader hidden"></span>
+        </button>
+      </div>
+      <p class="disclaimer">
+        Faqat o'zingizga tegishli yoki ruxsat berilgan saytlarni tekshiring.
+      </p>
+    </form>
+
+    <div id="results" class="results hidden">
+      <div class="risk-card" id="riskCard">
+        <div class="risk-score">
+          <span class="score-value" id="riskScore">0</span>
+          <span class="score-label">Xavf balli</span>
+        </div>
+        <div class="risk-info">
+          <h2 id="riskLevel">—</h2>
+          <p id="domainInfo">—</p>
+          <p class="scan-time" id="scanTime">—</p>
+        </div>
+      </div>
+
+      <div class="summary-grid" id="summaryGrid"></div>
+
+      <div class="results-actions">
+        <button type="button" id="pdfBtn" class="pdf-btn hidden">
+          PDF hisobot yuklab olish
+        </button>
+      </div>
+
+      <div class="findings-section">
+        <h3>Topilgan zaifliklar</h3>
+        <div id="findingsList"></div>
+      </div>
+    </div>
+
+    <div id="error" class="error hidden"></div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

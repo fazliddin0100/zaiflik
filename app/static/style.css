@@ -1,0 +1,326 @@
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #242836;
+  --border: #2e3348;
+  --text: #e8eaf0;
+  --text-muted: #8b90a5;
+  --accent: #6366f1;
+  --accent-hover: #818cf8;
+  --kritik: #ef4444;
+  --yuqori: #f97316;
+  --orta: #eab308;
+  --past: #22c55e;
+  --malumot: #3b82f6;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--accent);
+}
+
+.logo h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.scan-form {
+  margin-bottom: 2rem;
+}
+
+.input-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+  border-color: var(--accent);
+}
+
+.input-group button {
+  padding: 0.875rem 1.75rem;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 130px;
+  justify-content: center;
+}
+
+.input-group button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.input-group button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.btn-loader {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.hidden { display: none !important; }
+
+.risk-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.risk-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100px;
+}
+
+.score-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.risk-info h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.risk-info p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.scan-time {
+  font-size: 0.8rem !important;
+  margin-top: 0.25rem;
+}
+
+.risk-critical .score-value { color: var(--kritik); }
+.risk-high .score-value { color: var(--yuqori); }
+.risk-medium .score-value { color: var(--orta); }
+.risk-low .score-value { color: var(--past); }
+.risk-minimal .score-value { color: var(--malumot); }
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.results-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.pdf-btn {
+  padding: 0.625rem 1.25rem;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.pdf-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--surface);
+}
+
+.pdf-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.summary-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.summary-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.summary-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.sev-kritik .summary-count { color: var(--kritik); }
+.sev-yuqori .summary-count { color: var(--yuqori); }
+.sev-o'rta .summary-count { color: var(--orta); }
+.sev-past .summary-count { color: var(--past); }
+.sev-ma'lumot .summary-count { color: var(--malumot); }
+
+.findings-section h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.finding-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  border-left: 4px solid var(--border);
+}
+
+.finding-card.sev-kritik { border-left-color: var(--kritik); }
+.finding-card.sev-yuqori { border-left-color: var(--yuqori); }
+.finding-card.sev-o'rta { border-left-color: var(--orta); }
+.finding-card.sev-past { border-left-color: var(--past); }
+.finding-card.sev-ma'lumot { border-left-color: var(--malumot); }
+
+.finding-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.finding-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-kritik { background: rgba(239,68,68,0.15); color: var(--kritik); }
+.badge-yuqori { background: rgba(249,115,22,0.15); color: var(--yuqori); }
+.badge-o'rta { background: rgba(234,179,8,0.15); color: var(--orta); }
+.badge-past { background: rgba(34,197,94,0.15); color: var(--past); }
+.badge-ma'lumot { background: rgba(59,130,246,0.15); color: var(--malumot); }
+
+.finding-desc {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.finding-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.finding-rec {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface2);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--accent-hover);
+}
+
+.error {
+  background: rgba(239,68,68,0.1);
+  border: 1px solid var(--kritik);
+  color: var(--kritik);
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .input-group { flex-direction: column; }
+  .risk-card { flex-direction: column; text-align: center; }
+}
