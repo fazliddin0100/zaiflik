@@ -4,7 +4,6 @@ import json
 import sys
 import webbrowser
 from pathlib import Path
-from urllib.parse import quote
 
 from app.scanner import VulnerabilityScanner
 from app.serialize import result_to_dict
@@ -100,10 +99,9 @@ def run_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
     url = f"http://localhost:{args.port}"
-    if args.domain:
-        url += f"?domain={quote(args.domain)}"
 
     print(f"Server ishga tushmoqda: {url}")
+    print("Brauzerda domen kiriting va 'Tekshirish' tugmasini bosing.")
     print("To'xtatish uchun: Ctrl+C")
     open_browser(url)
     uvicorn.run("main:app", host="0.0.0.0", port=args.port, reload=False)
@@ -131,9 +129,6 @@ def main() -> int:
 
     serve_parser = sub.add_parser("serve", help="Web interfeysni ishga tushirish (brauzer ochiladi)")
     serve_parser.add_argument("--port", "-p", type=int, default=8000, help="Port (default: 8000)")
-    serve_parser.add_argument(
-        "--domain", "-d", help="Brauzerda avtomatik tekshiriladigan domen"
-    )
 
     args = parser.parse_args()
 

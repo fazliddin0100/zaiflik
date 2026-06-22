@@ -116,6 +116,13 @@ header {
   text-align: center;
 }
 
+.scan-status {
+  font-size: 0.875rem;
+  color: var(--accent-hover);
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
 .btn-loader {
   width: 18px;
   height: 18px;

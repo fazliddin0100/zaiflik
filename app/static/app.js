@@ -5,9 +5,11 @@ const btnText = scanBtn.querySelector(".btn-text");
 const btnLoader = scanBtn.querySelector(".btn-loader");
 const resultsEl = document.getElementById("results");
 const errorEl = document.getElementById("error");
+const statusEl = document.getElementById("scanStatus");
 const pdfBtn = document.getElementById("pdfBtn");
 
 let lastScannedDomain = null;
+let scanning = false;
 
 const SEVERITY_ORDER = ["kritik", "yuqori", "o'rta", "past", "ma'lumot"];
 const SEVERITY_LABELS = {
@@ -18,43 +20,73 @@ const SEVERITY_LABELS = {
   "ma'lumot": "Ma'lumot",
 };
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const domain = domainInput.value.trim();
-  if (!domain) return;
+const SCAN_TIMEOUT_MS = 180000;
+
+function setLoading(loading) {
+  scanning = loading;
+  scanBtn.disabled = loading;
+  domainInput.disabled = loading;
+  btnText.classList.toggle("hidden", loading);
+  btnLoader.classList.toggle("hidden", !loading);
+  btnText.textContent = loading ? "Tekshirilmoqda..." : "Tekshirish";
+
+  if (loading) {
+    statusEl.textContent = "Sayt tekshirilmoqda, biroz kuting...";
+    statusEl.classList.remove("hidden");
+  } else {
+    statusEl.classList.add("hidden");
+    statusEl.textContent = "";
+  }
+}
+
+async function runScan(domain) {
+  if (!domain || scanning) return;
 
   setLoading(true);
   resultsEl.classList.add("hidden");
   errorEl.classList.add("hidden");
+  pdfBtn.classList.add("hidden");
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), SCAN_TIMEOUT_MS);
 
   try {
     const res = await fetch("/api/scan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ domain }),
+      signal: controller.signal,
     });
 
     if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.detail || "Tekshiruvda xatolik yuz berdi");
+      let message = "Tekshiruvda xatolik yuz berdi";
+      try {
+        const err = await res.json();
+        message = err.detail || message;
+      } catch (_) {}
+      throw new Error(message);
     }
 
     const data = await res.json();
     lastScannedDomain = domain;
     renderResults(data);
   } catch (err) {
-    errorEl.textContent = err.message;
+    if (err.name === "AbortError") {
+      errorEl.textContent = "Tekshiruv vaqti tugadi (3 daqiqa). Qayta urinib ko'ring.";
+    } else {
+      errorEl.textContent = err.message || "Noma'lum xatolik";
+    }
     errorEl.classList.remove("hidden");
   } finally {
+    clearTimeout(timeoutId);
     setLoading(false);
   }
-});
-
-function setLoading(loading) {
-  scanBtn.disabled = loading;
-  btnText.classList.toggle("hidden", loading);
-  btnLoader.classList.toggle("hidden", !loading);
 }
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  runScan(domainInput.value.trim());
+});
 
 function getRiskClass(score) {
   if (score >= 80) return "risk-critical";
@@ -100,7 +132,7 @@ function renderResults(data) {
         </div>
         <p class="finding-desc">${escapeHtml(f.description)}</p>
         <div class="finding-meta">Kategoriya: ${escapeHtml(f.category)}</div>
-        ${f.recommendation ? `<div class="finding-rec">💡 ${escapeHtml(f.recommendation)}</div>` : ""}
+        ${f.recommendation ? `<div class="finding-rec">${escapeHtml(f.recommendation)}</div>` : ""}
       </div>
     `
       )
@@ -148,9 +180,4 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-const urlParams = new URLSearchParams(window.location.search);
-const autoDomain = urlParams.get("domain");
-if (autoDomain) {
-  domainInput.value = autoDomain;
-  form.requestSubmit();
-}
+setLoading(false);
