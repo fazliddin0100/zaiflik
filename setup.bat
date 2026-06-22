@@ -11,6 +11,6 @@ echo Kutubxonalar o'rnatilmoqda...
 .venv\Scripts\pip install -r requirements.txt
 
 echo.
-echo Tayyor! Ishlatish:
-echo   .venv\Scripts\activate
-echo   python cli.py scan my.mingeo.uz
+echo Tayyor! Keyingi qadamlar:
+echo   1. .venv\Scripts\activate
+echo   2. python cli.py serve

@@ -8,7 +8,7 @@ const errorEl = document.getElementById("error");
 const statusEl = document.getElementById("scanStatus");
 const pdfBtn = document.getElementById("pdfBtn");
 
-let lastScannedDomain = null;
+let lastScannedInput = null;
 let scanning = false;
 
 const SEVERITY_ORDER = ["kritik", "yuqori", "o'rta", "past", "ma'lumot"];
@@ -68,7 +68,7 @@ async function runScan(domain) {
     }
 
     const data = await res.json();
-    lastScannedDomain = domain;
+    lastScannedInput = domain;
     renderResults(data);
   } catch (err) {
     if (err.name === "AbortError") {
@@ -251,35 +251,60 @@ function renderResults(data) {
 }
 
 pdfBtn.addEventListener("click", async () => {
-  if (!lastScannedDomain) return;
+  if (!lastScannedInput) return;
 
   pdfBtn.disabled = true;
-  pdfBtn.textContent = "PDF tayyorlanmoqda...";
+  pdfBtn.textContent = "PDF yaratilmoqda...";
+  errorEl.classList.add("hidden");
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     const res = await fetch("/api/scan/pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ domain: lastScannedDomain }),
+      body: JSON.stringify({ domain: lastScannedInput }),
+      signal: controller.signal,
     });
 
-    if (!res.ok) throw new Error("PDF yaratishda xatolik");
+    if (!res.ok) {
+      let message = "PDF yaratishda xatolik";
+      try {
+        const err = await res.json();
+        message = err.detail || message;
+      } catch (_) {}
+      throw new Error(message);
+    }
 
     const blob = await res.blob();
+    if (!blob.size) throw new Error("PDF fayli bo'sh");
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `zaiflik-${lastScannedDomain}.pdf`;
+    a.download = `zaiflik-${dataSafeName(lastScannedInput)}.pdf`;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   } catch (err) {
-    errorEl.textContent = err.message;
+    if (err.name === "AbortError") {
+      errorEl.textContent = "PDF yaratish vaqti tugadi. Qayta urinib ko'ring.";
+    } else {
+      errorEl.textContent = err.message || "PDF yuklab bo'lmadi";
+    }
     errorEl.classList.remove("hidden");
   } finally {
+    clearTimeout(timeoutId);
     pdfBtn.disabled = false;
     pdfBtn.textContent = "PDF hisobot yuklab olish";
   }
 });
+
+function dataSafeName(input) {
+  return input.replace(/^https?:\/\//, "").replace(/[/?#]/g, "_").slice(0, 60);
+}
 
 function escapeHtml(text) {
   const div = document.createElement("div");

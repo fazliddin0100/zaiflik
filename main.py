@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -7,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from app.scanner import VulnerabilityScanner
 from app.serialize import result_to_dict
-from app.report import generate_pdf
+from app.cache import put_scan, get_scan
 
 app = FastAPI(title="Zaiflik Skaneri", version="2.0.0")
 scanner = VulnerabilityScanner()
@@ -59,6 +60,7 @@ async def scan_domain(req: ScanRequest):
         raise HTTPException(status_code=400, detail="Domen kiritilmagan")
 
     result = await scanner.scan(domain)
+    put_scan(domain, result)
     data = result_to_dict(result)
     return ScanResponse(**data)
 
@@ -69,13 +71,32 @@ async def scan_domain_pdf(req: ScanRequest):
     if not domain:
         raise HTTPException(status_code=400, detail="Domen kiritilmagan")
 
-    result = await scanner.scan(domain)
-    pdf_bytes = generate_pdf(result)
+    result = get_scan(domain)
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Avval saytni tekshiring, keyin PDF yuklab oling.",
+        )
 
+    try:
+        from app.report import generate_pdf
+    except ImportError:
+        raise HTTPException(
+            status_code=500,
+            detail="PDF uchun fpdf2 kerak: pip install fpdf2",
+        )
+
+    try:
+        pdf_bytes = await asyncio.to_thread(generate_pdf, result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"PDF yaratishda xatolik: {e}")
+
+    safe_name = result.domain.replace("/", "_")[:64]
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="zaiflik-{result.domain}.pdf"'
+            "Content-Disposition": f'attachment; filename="zaiflik-{safe_name}.pdf"',
+            "Content-Length": str(len(pdf_bytes)),
         },
     )

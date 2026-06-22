@@ -64,6 +64,8 @@ class ZaiflikPDF(FPDF):
     def write_line(self, text: str, size: int = 10, color: tuple[int, int, int] = (30, 30, 30)):
         self._set_body_font(size)
         self.set_text_color(*color)
+        if self._font == "Helvetica":
+            text = text.encode("latin-1", errors="replace").decode("latin-1")
         self.multi_cell(0, 5, text)
         self.ln(1)
 

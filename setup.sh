@@ -13,7 +13,6 @@ echo "Kutubxonalar o'rnatilmoqda..."
 .venv/bin/pip install -r requirements.txt
 
 echo ""
-echo "Tayyor! Ishlatish:"
-echo "  source .venv/bin/activate"
-echo "  python cli.py serve                          # brauzerda ochiladi"
-echo "  python cli.py scan my.mingeo.uz --open       # HTML brauzerda"
+echo "Tayyor! Keyingi qadamlar:"
+echo "  1. source .venv/bin/activate"
+echo "  2. python cli.py serve"
