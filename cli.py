@@ -5,7 +5,6 @@ import sys
 
 from app.scanner import VulnerabilityScanner
 from app.serialize import result_to_dict
-from app.report import generate_pdf
 
 SEVERITY_LABELS = {
     "kritik": "KRITIK",
@@ -62,6 +61,14 @@ async def run_scan(args: argparse.Namespace) -> int:
             print(output)
 
     if args.pdf:
+        try:
+            from app.report import generate_pdf
+        except ImportError:
+            print(
+                "PDF uchun fpdf2 kerak. O'rnating: pip install fpdf2",
+                file=sys.stderr,
+            )
+            return 1
         pdf_bytes = generate_pdf(result)
         with open(args.pdf, "wb") as f:
             f.write(pdf_bytes)
