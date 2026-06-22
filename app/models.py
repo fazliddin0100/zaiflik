@@ -1,6 +1,8 @@
 from enum import Enum
 from dataclasses import dataclass, field
 
+from app.infrastructure import InfrastructureInfo
+
 
 class Severity(str, Enum):
     CRITICAL = "kritik"
@@ -47,6 +49,7 @@ class ScanResult:
     error: str | None = None
     target_type: str = "domain"
     raw_input: str = ""
+    infrastructure: InfrastructureInfo | None = None
 
     @property
     def risk_score(self) -> float:

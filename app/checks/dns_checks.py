@@ -5,75 +5,81 @@ from app.models import Finding, Severity
 from app.target import is_ip
 
 
-def check_dns_records(domain: str) -> list[Finding]:
+def gather_dns_info(host: str) -> tuple[dict, list[Finding]]:
     findings: list[Finding] = []
+    info: dict = {
+        "a": [],
+        "aaaa": [],
+        "mx": [],
+        "ns": [],
+        "txt": [],
+        "ptr": [],
+        "spf": False,
+        "dmarc": False,
+    }
 
-    if is_ip(domain):
+    if is_ip(host):
         try:
-            rev_name = dns.reversename.from_address(domain)
+            rev_name = dns.reversename.from_address(host)
             answers = dns.resolver.resolve(rev_name, "PTR", lifetime=3.0)
-            ptr = ", ".join(str(r) for r in answers)
-            findings.append(
-                Finding(
-                    title="Teskari DNS (PTR)",
-                    description=f"IP {domain} → {ptr}",
-                    severity=Severity.INFO,
-                    category="DNS",
-                )
-            )
+            info["ptr"] = [str(r).rstrip(".") for r in answers]
         except Exception:
-            findings.append(
-                Finding(
-                    title="Teskari DNS (PTR) yo'q",
-                    description=f"{domain} uchun PTR yozuvi topilmadi.",
-                    severity=Severity.INFO,
-                    category="DNS",
-                )
-            )
-        return findings
+            info["ptr"] = []
+        return info, findings
 
     try:
-        answers = dns.resolver.resolve(domain, "A")
-        ips = [str(r) for r in answers]
-        findings.append(
-            Finding(
-                title="DNS A yozuvlari",
-                description=f"IP manzillar: {', '.join(ips)}",
-                severity=Severity.INFO,
-                category="DNS",
-            )
-        )
-    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer, dns.resolver.NoNameservers):
+        info["a"] = [str(r) for r in dns.resolver.resolve(host, "A", lifetime=3.0)]
+    except Exception:
         findings.append(
             Finding(
                 title="DNS A yozuvi topilmadi",
-                description=f"{domain} uchun A yozuvi mavjud emas.",
+                description=f"{host} uchun A yozuvi mavjud emas.",
                 severity=Severity.CRITICAL,
                 category="DNS",
                 recommendation="Domen DNS sozlamalarini tekshiring.",
             )
         )
-    except Exception as e:
+
+    try:
+        info["aaaa"] = [str(r) for r in dns.resolver.resolve(host, "AAAA", lifetime=3.0)]
+    except Exception:
+        pass
+
+    try:
+        info["mx"] = [str(r.exchange).rstrip(".") for r in dns.resolver.resolve(host, "MX", lifetime=3.0)]
+    except Exception:
+        pass
+
+    try:
+        info["ns"] = [str(r).rstrip(".") for r in dns.resolver.resolve(host, "NS", lifetime=3.0)]
+    except Exception:
+        pass
+
+    try:
+        info["txt"] = [str(r) for r in dns.resolver.resolve(host, "TXT", lifetime=3.0)]
+        info["spf"] = any("v=spf1" in t.lower() for t in info["txt"])
+    except Exception:
+        pass
+
+    try:
+        dmarc = dns.resolver.resolve(f"_dmarc.{host}", "TXT", lifetime=3.0)
+        info["dmarc"] = True
+        info["dmarc_record"] = [str(r) for r in dmarc]
+    except Exception:
+        info["dmarc"] = False
+
+    if not info["spf"]:
         findings.append(
             Finding(
-                title="DNS tekshiruvida xatolik",
-                description=str(e),
-                severity=Severity.INFO,
-                category="DNS",
+                title="SPF yozuvi yo'q",
+                description="Email spoofing hujumlariga qarshi himoya yo'q.",
+                severity=Severity.MEDIUM,
+                category="Email xavfsizligi",
+                recommendation="SPF DNS yozuvini qo'shing.",
             )
         )
 
-    try:
-        dns.resolver.resolve(f"_dmarc.{domain}", "TXT")
-        findings.append(
-            Finding(
-                title="DMARC yozuvi mavjud",
-                description="Email firibgarligiga qarshi DMARC sozlangan.",
-                severity=Severity.INFO,
-                category="Email xavfsizligi",
-            )
-        )
-    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
+    if not info["dmarc"]:
         findings.append(
             Finding(
                 title="DMARC yozuvi yo'q",
@@ -84,37 +90,4 @@ def check_dns_records(domain: str) -> list[Finding]:
             )
         )
 
-    try:
-        answers = dns.resolver.resolve(domain, "TXT")
-        spf_found = any("v=spf1" in str(r).lower() for r in answers)
-        if spf_found:
-            findings.append(
-                Finding(
-                    title="SPF yozuvi mavjud",
-                    description="Email yuborish uchun SPF sozlangan.",
-                    severity=Severity.INFO,
-                    category="Email xavfsizligi",
-                )
-            )
-        else:
-            findings.append(
-                Finding(
-                    title="SPF yozuvi yo'q",
-                    description="Email spoofing hujumlariga qarshi himoya yo'q.",
-                    severity=Severity.MEDIUM,
-                    category="Email xavfsizligi",
-                    recommendation="SPF DNS yozuvini qo'shing.",
-                )
-            )
-    except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
-        findings.append(
-            Finding(
-                title="SPF yozuvi yo'q",
-                description="TXT yozuvlari topilmadi.",
-                severity=Severity.MEDIUM,
-                category="Email xavfsizligi",
-                recommendation="SPF DNS yozuvini qo'shing.",
-            )
-        )
-
-    return findings
+    return info, findings

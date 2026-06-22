@@ -92,6 +92,23 @@ def generate_pdf(result: ScanResult) -> bytes:
             pdf.write_line(f"  {SEVERITY_LABELS[sev.value]}: {count} ta", size=10, color=color)
     pdf.ln(3)
 
+    if result.infrastructure:
+        infra = result.infrastructure
+        pdf.write_line("Tarmoq ma'lumotlari", size=12, color=(40, 40, 80))
+        if infra.unique_ips:
+            pdf.write_line(f"IP manzillar: {', '.join(infra.unique_ips)}", size=9)
+        for sub in infra.subdomains:
+            pdf.write_line(f"  {sub.name} -> {', '.join(sub.ips)}", size=9)
+        if infra.ports:
+            ports_txt = ", ".join(f"{p.port}/{p.service}" for p in infra.ports)
+            pdf.write_line(f"Portlar ({infra.host}): {ports_txt}", size=9)
+        dns = infra.dns
+        if dns.get("mx"):
+            pdf.write_line(f"MX: {', '.join(dns['mx'])}", size=9)
+        if dns.get("ns"):
+            pdf.write_line(f"NS: {', '.join(dns['ns'])}", size=9)
+        pdf.ln(2)
+
     pdf.write_line("Topilgan zaifliklar", size=12, color=(40, 40, 80))
     pdf.ln(2)
 

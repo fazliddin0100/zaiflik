@@ -88,6 +88,110 @@ form.addEventListener("submit", (e) => {
   runScan(domainInput.value.trim());
 });
 
+function renderInfrastructure(infra) {
+  const section = document.getElementById("infraSection");
+  const content = document.getElementById("infraContent");
+
+  if (!infra || !infra.host) {
+    section.classList.add("hidden");
+    return;
+  }
+
+  let html = "";
+
+  if (infra.unique_ips?.length) {
+    html += `
+      <div class="infra-block">
+        <h4>IP manzillar (${infra.unique_ips.length})</h4>
+        <div class="infra-tags">${infra.unique_ips.map((ip) => `<span class="infra-tag">${escapeHtml(ip)}</span>`).join("")}</div>
+      </div>`;
+  }
+
+  if (infra.subdomains?.length) {
+    html += `
+      <div class="infra-block">
+        <h4>Subdomenlar (${infra.subdomains.length})</h4>
+        <table class="infra-table">
+          <thead><tr><th>Subdomen</th><th>IP manzillar</th><th>Holat</th></tr></thead>
+          <tbody>
+            ${infra.subdomains.map((s) => `
+              <tr class="${s.risky ? "infra-risky" : ""}">
+                <td>${escapeHtml(s.name)}</td>
+                <td>${escapeHtml(s.ips.join(", "))}</td>
+                <td>${s.risky ? '<span class="badge badge-yuqori">Xavfli</span>' : '<span class="badge badge-past">Normal</span>'}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  if (infra.ports?.length) {
+    html += `
+      <div class="infra-block">
+        <h4>Ochiq portlar — ${escapeHtml(infra.host)} (${infra.ports.length})</h4>
+        <table class="infra-table">
+          <thead><tr><th>Port</th><th>Xizmat</th><th>Holat</th></tr></thead>
+          <tbody>
+            ${infra.ports.map((p) => `
+              <tr class="${p.risky ? "infra-risky" : ""}">
+                <td>${p.port}</td>
+                <td>${escapeHtml(p.service)}</td>
+                <td>${p.risky ? '<span class="badge badge-yuqori">Xavfli</span>' : '<span class="badge badge-ma\'lumot">Ochiq</span>'}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  const dns = infra.dns || {};
+  const dnsRows = [];
+  if (dns.a?.length) dnsRows.push(["A", dns.a.join(", ")]);
+  if (dns.aaaa?.length) dnsRows.push(["AAAA", dns.aaaa.join(", ")]);
+  if (dns.mx?.length) dnsRows.push(["MX", dns.mx.join(", ")]);
+  if (dns.ns?.length) dnsRows.push(["NS", dns.ns.join(", ")]);
+  if (dns.ptr?.length) dnsRows.push(["PTR", dns.ptr.join(", ")]);
+  if (dns.spf) dnsRows.push(["SPF", "Mavjud"]);
+  if (dns.dmarc) dnsRows.push(["DMARC", "Mavjud"]);
+  if (dns.txt?.length) dnsRows.push(["TXT", dns.txt.slice(0, 3).join("; ") + (dns.txt.length > 3 ? "..." : "")]);
+
+  if (dnsRows.length) {
+    html += `
+      <div class="infra-block">
+        <h4>DNS yozuvlari</h4>
+        <table class="infra-table">
+          <thead><tr><th>Turi</th><th>Qiymat</th></tr></thead>
+          <tbody>
+            ${dnsRows.map(([t, v]) => `<tr><td>${t}</td><td>${escapeHtml(v)}</td></tr>`).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  if (dns.ports_by_ip) {
+    for (const [ip, ports] of Object.entries(dns.ports_by_ip)) {
+      if (ip === infra.host) continue;
+      html += `
+        <div class="infra-block">
+          <h4>Ochiq portlar — ${escapeHtml(ip)} (${ports.length})</h4>
+          <table class="infra-table">
+            <thead><tr><th>Port</th><th>Xizmat</th><th>Holat</th></tr></thead>
+            <tbody>
+              ${ports.map((p) => `
+                <tr class="${p.risky ? "infra-risky" : ""}">
+                  <td>${p.port}</td>
+                  <td>${escapeHtml(p.service)}</td>
+                  <td>${p.risky ? '<span class="badge badge-yuqori">Xavfli</span>' : '<span class="badge badge-ma\'lumot">Ochiq</span>'}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+  }
+
+  content.innerHTML = html || '<p class="infra-empty">Tarmoq ma\'lumotlari topilmadi.</p>';
+  section.classList.remove("hidden");
+}
+
 function getRiskClass(score) {
   if (score >= 80) return "risk-critical";
   if (score >= 60) return "risk-high";
@@ -117,6 +221,8 @@ function renderResults(data) {
       </div>
     `;
   }).join("");
+
+  renderInfrastructure(data.infrastructure || {});
 
   const findingsList = document.getElementById("findingsList");
   if (data.findings.length === 0) {

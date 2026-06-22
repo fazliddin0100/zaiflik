@@ -254,6 +254,84 @@ header {
   font-size: 1.1rem;
 }
 
+.infra-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.infra-section h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  color: var(--accent-hover);
+}
+
+.infra-block {
+  margin-bottom: 1.25rem;
+}
+
+.infra-block:last-child {
+  margin-bottom: 0;
+}
+
+.infra-block h4 {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.infra-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.infra-tag {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+  font-family: monospace;
+}
+
+.infra-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.infra-table th,
+.infra-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.infra-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.infra-table td {
+  color: var(--text);
+}
+
+.infra-table tr.infra-risky td {
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.infra-empty {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
 .finding-card {
   background: var(--surface);
   border: 1px solid var(--border);

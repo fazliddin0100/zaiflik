@@ -33,6 +33,7 @@ class ScanResponse(BaseModel):
     url: str
     target_type: str = "domain"
     raw_input: str = ""
+    infrastructure: dict = {}
     risk_score: float
     risk_level: str
     scan_duration_ms: int

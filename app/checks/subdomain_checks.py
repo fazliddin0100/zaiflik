@@ -1,9 +1,9 @@
 import asyncio
 
 import dns.resolver
-import dns.reversename
 
 from app.models import Finding, Severity
+from app.infrastructure import SubdomainEntry
 from app.target import is_ip
 
 COMMON_SUBDOMAINS = [
@@ -15,6 +15,8 @@ COMMON_SUBDOMAINS = [
     "img", "images", "media", "upload", "files", "cloud", "sso", "auth",
 ]
 
+RISKY_KEYWORDS = ("admin", "dev", "staging", "test", "db", "vpn", "backend", "cpanel")
+
 
 def _resolve_a(fqdn: str) -> list[str] | None:
     try:
@@ -24,68 +26,46 @@ def _resolve_a(fqdn: str) -> list[str] | None:
         return None
 
 
-async def check_subdomains(base_domain: str, current_host: str) -> list[Finding]:
+async def discover_subdomains(base_domain: str, current_host: str) -> tuple[list[SubdomainEntry], list[Finding]]:
     findings: list[Finding] = []
     if is_ip(base_domain):
-        return findings
+        return [], findings
 
-    found: list[tuple[str, list[str]]] = []
+    found: list[SubdomainEntry] = []
+    seen: set[str] = set()
 
-    async def try_sub(sub: str) -> tuple[str, list[str]] | None:
+    async def try_sub(sub: str) -> SubdomainEntry | None:
         fqdn = f"{sub}.{base_domain}"
         ips = await asyncio.to_thread(_resolve_a, fqdn)
-        if ips:
-            return fqdn, ips
-        return None
+        if not ips:
+            return None
+        risky = any(k in fqdn for k in RISKY_KEYWORDS)
+        return SubdomainEntry(name=fqdn, ips=ips, risky=risky)
 
     results = await asyncio.gather(*[try_sub(sub) for sub in COMMON_SUBDOMAINS])
 
-    seen: set[str] = set()
-    for item in results:
-        if not item:
-            continue
-        fqdn, ips = item
-        if fqdn in seen:
-            continue
-        seen.add(fqdn)
-        found.append((fqdn, ips))
+    for entry in results:
+        if entry and entry.name not in seen:
+            seen.add(entry.name)
+            found.append(entry)
 
     if current_host not in seen and not is_ip(current_host):
         ips = await asyncio.to_thread(_resolve_a, current_host)
         if ips:
-            found.insert(0, (current_host, ips))
+            risky = any(k in current_host for k in RISKY_KEYWORDS)
+            found.insert(0, SubdomainEntry(name=current_host, ips=ips, risky=risky))
+            seen.add(current_host)
 
-    if not found:
-        findings.append(
-            Finding(
-                title="Qo'shimcha subdomenlar topilmadi",
-                description=f"{base_domain} uchun umumiy subdomenlar aniqlanmadi.",
-                severity=Severity.INFO,
-                category="Subdomenlar",
+    for entry in found:
+        if entry.risky:
+            findings.append(
+                Finding(
+                    title=f"Xavfli subdomen: {entry.name}",
+                    description=f"IP: {', '.join(entry.ips)} — maxsus e'tibor talab qiladi.",
+                    severity=Severity.MEDIUM,
+                    category="Subdomenlar",
+                    recommendation="Keraksiz subdomenlarni yoping yoki himoyalang.",
+                )
             )
-        )
-        return findings
 
-    names = [f[0] for f in found]
-    findings.append(
-        Finding(
-            title=f"Subdomenlar topildi: {len(found)} ta",
-            description=", ".join(names[:12]) + ("..." if len(names) > 12 else ""),
-            severity=Severity.INFO,
-            category="Subdomenlar",
-        )
-    )
-
-    for fqdn, ips in found:
-        sev = Severity.MEDIUM if any(k in fqdn for k in ("admin", "dev", "staging", "test", "db", "vpn")) else Severity.INFO
-        findings.append(
-            Finding(
-                title=f"Subdomen: {fqdn}",
-                description=f"IP manzillar: {', '.join(ips)}",
-                severity=sev,
-                category="Subdomenlar",
-                recommendation="Keraksiz subdomenlarni yoping yoki himoyalang." if sev == Severity.MEDIUM else "",
-            )
-        )
-
-    return findings
+    return found, findings

@@ -11,6 +11,7 @@ def result_to_dict(result: ScanResult) -> dict:
         "url": result.url,
         "target_type": result.target_type,
         "raw_input": result.raw_input,
+        "infrastructure": result.infrastructure.to_dict() if result.infrastructure else {},
         "risk_score": result.risk_score,
         "risk_level": result.risk_level,
         "scan_duration_ms": result.scan_duration_ms,
