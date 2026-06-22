@@ -116,7 +116,10 @@ def main() -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     scan_parser = sub.add_parser("scan", help="Domenni tekshirish")
-    scan_parser.add_argument("domain", help="Tekshiriladigan domen (masalan: example.com)")
+    scan_parser.add_argument(
+        "domain",
+        help="Domen, IP yoki URL (masalan: example.com, 8.8.8.8, https://site.uz/admin)",
+    )
     scan_parser.add_argument(
         "--format", "-f", choices=["text", "json"], default="text", help="Chiqish formati"
     )

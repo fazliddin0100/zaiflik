@@ -45,6 +45,8 @@ class ScanResult:
     findings: list[Finding] = field(default_factory=list)
     scan_duration_ms: int = 0
     error: str | None = None
+    target_type: str = "domain"
+    raw_input: str = ""
 
     @property
     def risk_score(self) -> float:

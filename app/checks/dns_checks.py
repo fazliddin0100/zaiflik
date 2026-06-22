@@ -1,10 +1,36 @@
 import dns.resolver
+import dns.reversename
 
 from app.models import Finding, Severity
+from app.target import is_ip
 
 
 def check_dns_records(domain: str) -> list[Finding]:
     findings: list[Finding] = []
+
+    if is_ip(domain):
+        try:
+            rev_name = dns.reversename.from_address(domain)
+            answers = dns.resolver.resolve(rev_name, "PTR", lifetime=3.0)
+            ptr = ", ".join(str(r) for r in answers)
+            findings.append(
+                Finding(
+                    title="Teskari DNS (PTR)",
+                    description=f"IP {domain} → {ptr}",
+                    severity=Severity.INFO,
+                    category="DNS",
+                )
+            )
+        except Exception:
+            findings.append(
+                Finding(
+                    title="Teskari DNS (PTR) yo'q",
+                    description=f"{domain} uchun PTR yozuvi topilmadi.",
+                    severity=Severity.INFO,
+                    category="DNS",
+                )
+            )
+        return findings
 
     try:
         answers = dns.resolver.resolve(domain, "A")

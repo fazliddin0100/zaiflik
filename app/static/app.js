@@ -102,7 +102,8 @@ function renderResults(data) {
 
   document.getElementById("riskScore").textContent = data.risk_score;
   document.getElementById("riskLevel").textContent = data.risk_level;
-  document.getElementById("domainInfo").textContent = `${data.domain} → ${data.url}`;
+  document.getElementById("domainInfo").textContent =
+    `${data.target_type ? data.target_type.toUpperCase() + " | " : ""}${data.domain} → ${data.url}`;
   document.getElementById("scanTime").textContent =
     `Tekshiruv vaqti: ${(data.scan_duration_ms / 1000).toFixed(1)}s`;
 

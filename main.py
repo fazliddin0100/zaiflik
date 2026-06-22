@@ -31,6 +31,8 @@ class FindingResponse(BaseModel):
 class ScanResponse(BaseModel):
     domain: str
     url: str
+    target_type: str = "domain"
+    raw_input: str = ""
     risk_score: float
     risk_level: str
     scan_duration_ms: int

@@ -6,18 +6,9 @@ from datetime import datetime, timezone
 import httpx
 
 from app.models import Finding, Severity
+from app.target import normalize_domain, normalize_url, parse_target
 
-
-def normalize_domain(domain: str) -> str:
-    domain = domain.strip().lower()
-    domain = re.sub(r"^https?://", "", domain)
-    domain = domain.rstrip("/").split("/")[0]
-    return domain
-
-
-def normalize_url(domain: str) -> str:
-    domain = normalize_domain(domain)
-    return f"https://{domain}"
+__all__ = ["normalize_domain", "normalize_url", "parse_target"]
 
 
 async def check_https_redirect(domain: str) -> list[Finding]:
