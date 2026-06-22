@@ -147,3 +147,10 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+const urlParams = new URLSearchParams(window.location.search);
+const autoDomain = urlParams.get("domain");
+if (autoDomain) {
+  domainInput.value = autoDomain;
+  form.requestSubmit();
+}
